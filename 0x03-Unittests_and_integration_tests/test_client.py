@@ -74,7 +74,8 @@ class TestGithubOrgClient(unittest.TestCase):
 @parameterized_class(('org_payload', 'repos_payload',
                       'expected_repos', 'apache2_repos'), TEST_PAYLOAD)
 class TestIntegrationGithubOrgClient(unittest.TestCase):
-    """Tests of the GithubOrgClient class using the MockResponse and side_effect
+    """Tests of the GithubOrgClient class using
+    the MockResponse and side_effect
     fixture."""
 
     @classmethod
@@ -89,8 +90,10 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         def side_effect(url):
             """Return a MockResponse based on the url.
 
-            If the url ends with "/orgs/google", return the org_payload.
-            If the url ends with "/orgs/google/repos", return the repos_payload.
+            If the url ends with "/orgs/google",
+            return the org_payload.
+            If the url ends with "/orgs/google/repos",
+            return the repos_payload.
             Otherwise, return None.
             """
             class MockResponse:
@@ -113,7 +116,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def tearDownClass(cls):
         """Stop the mock.
 
-        This is done in tearDownClass so that all tests finish using the same mock.
+        This is done in tearDownClass so that all
+        tests finish using the same mock.
         """
         cls.get_patcher.stop()
 
@@ -123,7 +127,8 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         self.assertEqual(github_org_client.public_repos(), self.expected_repos)
 
     def test_public_repos_with_license(self):
-        """Test GithubOrgClient.public_repos returns the correct value with a license."""
+        """Test GithubOrgClient.public_repos
+        returns the correct value with a license."""
         github_org_client = GithubOrgClient("google")
         self.assertEqual(
             github_org_client.public_repos(license="apache-2.0"),
