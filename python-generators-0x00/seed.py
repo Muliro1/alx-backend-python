@@ -58,40 +58,60 @@ def create_table(connection):
         print(f"Error creating table: {err}")
 
 
-def insert_data(connection, data):
-    """Insert data into user_data table"""
+def insert_data(connection, csv_file):
+    """Insert data from CSV file into user_data table"""
     try:
-        cursor = connection.cursor()
-        # Check if record already exists
-        cursor.execute("SELECT 1 FROM user_data WHERE email = %s", (data[1],))
-        if not cursor.fetchone():
-            # Generate UUID for new record
-            user_id = str(uuid.uuid4())
+        with open(csv_file, 'r') as file:
+            csv_reader = csv.reader(file)
+            cursor = connection.cursor()
             
-            # Debug print
-            print(f"Processing data: {data}")
+            # Skip header row
+            next(csv_reader)
             
-            # Handle age value
-            try:
-                # Remove any non-numeric characters and convert to int
-                age_str = ''.join(filter(str.isdigit, str(data[2])))
-                if not age_str:
-                    age = 0  # Default value if no digits found
-                else:
-                    age = int(age_str)
-            except (ValueError, TypeError):
-                age = 0  # Default value if conversion fails
+            for row_num, row in enumerate(csv_reader, start=2):  # start=2 because we skipped header
+                try:
+                    # Debug print
+                    print(f"Processing row {row_num}: {row}")
+                    
+                    # Remove quotes from each field
+                    cleaned_row = [field.strip('"') for field in row]
+                    
+                    # Check if record already exists
+                    cursor.execute("SELECT 1 FROM user_data WHERE email = %s", (cleaned_row[1],))
+                    if not cursor.fetchone():
+                        # Generate UUID for new record
+                        user_id = str(uuid.uuid4())
+                        
+                        # Handle age value
+                        try:
+                            # Remove any non-numeric characters and convert to int
+                            age_str = ''.join(filter(str.isdigit, str(cleaned_row[2])))
+                            if not age_str:
+                                age = 0  # Default value if no digits found
+                            else:
+                                age = int(age_str)
+                        except (ValueError, TypeError):
+                            age = 0  # Default value if conversion fails
+                        
+                        cursor.execute("""
+                            INSERT INTO user_data (user_id, name, email, age)
+                            VALUES (%s, %s, %s, %s)
+                        """, (user_id, cleaned_row[0], cleaned_row[1], age))
+                        connection.commit()
+                        print(f"Successfully inserted row {row_num}")
+                        
+                except IndexError as e:
+                    print(f"Error in row {row_num}: {row}")
+                    print(f"IndexError: {e}")
+                    continue  # Skip this row and continue with next
+                except Exception as e:
+                    print(f"Error processing row {row_num}: {e}")
+                    continue  # Skip this row and continue with next
             
-            # Debug print
-            print(f"Converted age: {age}")
-            
-            cursor.execute("""
-                INSERT INTO user_data (user_id, name, email, age)
-                VALUES (%s, %s, %s, %s)
-            """, (user_id, data[0], data[1], age))
-            connection.commit()
-        cursor.close()
+            cursor.close()
     except mysql.connector.Error as err:
         print(f"Error inserting data: {err}")
+    except FileNotFoundError:
+        print(f"Error: File {csv_file} not found")
     except Exception as e:
         print(f"Unexpected error: {e}")
