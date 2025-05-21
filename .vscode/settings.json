@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./python-generators-0x00/1-"
+    ]
+}
