@@ -2,6 +2,7 @@
 
 import sqlite3
 from functools import wraps
+from datetime import datetime
 
 #### decorator to lof SQL queries
 
@@ -9,7 +10,7 @@ from functools import wraps
 def log_queries(func):
     @wraps(func)
     def wrapper(query, *args, **kwargs):
-        print(f"SQL Query: {query}")
+        print(f"[{datetime.now()}] SQL Query: {query}")
         return func(query, *args, **kwargs)
     return wrapper
 # Create the users table if it doesn't exist
