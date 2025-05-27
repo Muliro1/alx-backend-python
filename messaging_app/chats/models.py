@@ -1,10 +1,14 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
-    # Extend with additional fields if needed
-    # Example: phone_number = models.CharField(max_length=20, blank=True, null=True)
-    pass
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=128)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    # Add other fields as needed
 
 class Conversation(models.Model):
     participants = models.ManyToManyField(User, related_name='conversations')
@@ -21,4 +25,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message {self.id} from {self.sender.username}"
-
