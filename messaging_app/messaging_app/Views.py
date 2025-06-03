@@ -1,7 +1,7 @@
 from rest_framework import viewsets
-from .models import Message
-from .serializers import MessageSerializer
-from .permissions import IsParticipantOfConversation
+from chats.models import Message
+from chats.serializers import MessageSerializer
+from chats.permissions import IsParticipantOfConversation
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
