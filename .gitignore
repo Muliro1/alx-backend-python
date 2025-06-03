@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env/
+
+# Django
+*.log
+*.log.*
+*.log.*.*
+*.log.*.*.*
