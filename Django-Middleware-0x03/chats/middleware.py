@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from django.http import HttpResponseForbidden
 
 # Set up a module-level logger
 logger = logging.getLogger('request_logger')
@@ -24,3 +25,14 @@ class RequestLoggingMiddleware:
             handler.flush()
         response = self.get_response(request)
         return response
+
+class RestrictAccessByTimeMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        now = datetime.now().time()
+        # Restrict access outside 6PM (18:00) to 9PM (21:00)
+        if not (now >= datetime.strptime('18:00', '%H:%M').time() and now <= datetime.strptime('21:00', '%H:%M').time()):
+            return HttpResponseForbidden('Access to the messaging app is restricted during these hours.')
+        return self.get_response(request)
