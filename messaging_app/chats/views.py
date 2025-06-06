@@ -40,3 +40,13 @@ class MessageViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(message)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'], url_path='by-conversation/(?P<conversation_id>[^/.]+)')
+    def list_by_conversation(self, request, conversation_id=None):
+        # Check if user is a participant of the conversation
+        conversation = Conversation.objects.filter(id=conversation_id, participants=request.user).first()
+        if not conversation:
+            return Response({'detail': 'Forbidden'}, status=status.HTTP_403_FORBIDDEN)
+        messages = Message.objects.filter(conversation_id=conversation_id)
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
