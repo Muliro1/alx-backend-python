@@ -7,6 +7,9 @@ from .serializers import ConversationSerializer, MessageSerializer
 from rest_framework import filters 
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsParticipantOfConversation
+from .pagination import MessagePagination
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import MessageFilter
 
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
@@ -26,6 +29,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = MessageFilter
+    ordering_fields = ['timestamp']  # or your timestamp field
+    ordering = ['sent_at']  # newest first
 
     def create(self, request, *args, **kwargs):
         conversation_id = request.data.get('conversation')
