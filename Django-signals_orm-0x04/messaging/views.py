@@ -47,3 +47,71 @@ def get_threaded_conversation(request, message_id):
         'replies': get_replies(message)
     }
     return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_messages(request):
+    filters = {}
+    conversation_id = request.query_params.get('conversation_id')
+    sender_id = request.query_params.get('sender_id')
+    receiver_id = request.query_params.get('receiver_id')
+    parent_message_id = request.query_params.get('parent_message_id')
+
+    if conversation_id:
+        filters['conversation_id'] = conversation_id
+    if sender_id:
+        filters['sender_id'] = sender_id
+    if receiver_id:
+        filters['receiver_id'] = receiver_id
+    if parent_message_id:
+        filters['parent_message_id'] = parent_message_id
+
+    messages = Message.objects.filter(**filters).select_related('sender', 'receiver', 'edited_by', 'parent_message')
+    data = [
+        {
+            'id': msg.id,
+            'content': msg.content,
+            'sender': str(msg.sender),
+            'receiver': str(msg.receiver),
+            'timestamp': msg.timestamp,
+            'edited': msg.edited,
+            'edited_by': str(msg.edited_by) if msg.edited_by else None,
+            'parent_message': msg.parent_message.id if msg.parent_message else None
+        }
+        for msg in messages
+    ]
+    return Response(data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_message(request):
+    data = request.data
+    receiver = data.get('receiver')
+    content = data.get('content')
+    conversation = data.get('conversation')
+    parent_message = data.get('parent_message')
+
+    if not receiver or not content:
+        return Response({'detail': 'receiver and content are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    message_kwargs = {
+        'sender': request.user,
+        'receiver_id': receiver,
+        'content': content,
+    }
+    if conversation:
+        message_kwargs['conversation_id'] = conversation
+    if parent_message:
+        message_kwargs['parent_message_id'] = parent_message
+
+    message = Message.objects.create(**message_kwargs)
+    return Response({
+        'id': message.id,
+        'content': message.content,
+        'sender': str(message.sender),
+        'receiver': str(message.receiver),
+        'timestamp': message.timestamp,
+        'edited': message.edited,
+        'edited_by': str(message.edited_by) if message.edited_by else None,
+        'parent_message': message.parent_message.id if message.parent_message else None
+    }, status=status.HTTP_201_CREATED)
