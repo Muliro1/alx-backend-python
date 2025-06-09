@@ -90,21 +90,19 @@ def create_message(request):
     content = data.get('content')
     conversation = data.get('conversation')
     parent_message = data.get('parent_message')
-    sender = request.user
     if not receiver or not content:
         return Response({'detail': 'receiver and content are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    message_kwargs = {
-        'sender': request.user,
-        'receiver_id': receiver,
-        'content': content,
-    }
+    message = Message(
+        receiver_id=receiver,
+        content=content,
+    )
+    message.sender = request.user
     if conversation:
-        message_kwargs['conversation_id'] = conversation
+        message.conversation_id = conversation
     if parent_message:
-        message_kwargs['parent_message_id'] = parent_message
-
-    message = Message.objects.create(**message_kwargs)
+        message.parent_message_id = parent_message
+    message.save()
     return Response({
         'id': message.id,
         'content': message.content,
