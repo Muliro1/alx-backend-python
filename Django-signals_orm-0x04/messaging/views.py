@@ -90,7 +90,7 @@ def create_message(request):
     content = data.get('content')
     conversation = data.get('conversation')
     parent_message = data.get('parent_message')
-
+    sender = request.user
     if not receiver or not content:
         return Response({'detail': 'receiver and content are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
