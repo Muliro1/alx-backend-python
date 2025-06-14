@@ -4,6 +4,7 @@ from rest_framework import status, permissions
 from .models import Message
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.cache import cache_page
 
 class DeleteUserView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -50,6 +51,7 @@ def get_threaded_conversation(request, message_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@cache_page(60)  # Cache for 60 seconds
 def list_messages(request):
     filters = {}
     conversation_id = request.query_params.get('conversation_id')
