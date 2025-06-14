@@ -56,17 +56,22 @@ def list_messages(request):
     sender_id = request.query_params.get('sender_id')
     receiver_id = request.query_params.get('receiver_id')
     parent_message_id = request.query_params.get('parent_message_id')
+    unread_only = request.query_params.get('unread_only', 'false').lower() == 'true'
 
-    if conversation_id:
-        filters['conversation_id'] = conversation_id
-    if sender_id:
-        filters['sender_id'] = sender_id
-    if receiver_id:
-        filters['receiver_id'] = receiver_id
-    if parent_message_id:
-        filters['parent_message_id'] = parent_message_id
+    if unread_only:
+        messages = Message.unread.for_user(request.user)
+    else:
+        if conversation_id:
+            filters['conversation_id'] = conversation_id
+        if sender_id:
+            filters['sender_id'] = sender_id
+        if receiver_id:
+            filters['receiver_id'] = receiver_id
+        if parent_message_id:
+            filters['parent_message_id'] = parent_message_id
 
-    messages = Message.objects.filter(**filters).select_related('sender', 'receiver', 'edited_by', 'parent_message')
+        messages = Message.objects.filter(**filters).select_related('sender', 'receiver', 'edited_by', 'parent_message')
+
     data = [
         {
             'id': msg.id,
@@ -76,7 +81,8 @@ def list_messages(request):
             'timestamp': msg.timestamp,
             'edited': msg.edited,
             'edited_by': str(msg.edited_by) if msg.edited_by else None,
-            'parent_message': msg.parent_message.id if msg.parent_message else None
+            'parent_message': msg.parent_message.id if msg.parent_message else None,
+            'is_read': msg.is_read
         }
         for msg in messages
     ]
