@@ -70,7 +70,12 @@ def list_messages(request):
         if parent_message_id:
             filters['parent_message_id'] = parent_message_id
 
-        messages = Message.objects.filter(**filters).select_related('sender', 'receiver', 'edited_by', 'parent_message')
+        messages = Message.objects.filter(**filters)\
+            .select_related('sender', 'receiver', 'edited_by', 'parent_message')\
+            .only(
+                'id', 'content', 'sender', 'receiver', 'timestamp',
+                'edited', 'edited_by', 'parent_message', 'is_read'
+            )
 
     data = [
         {
