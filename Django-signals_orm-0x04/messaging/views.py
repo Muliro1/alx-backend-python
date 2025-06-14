@@ -59,7 +59,7 @@ def list_messages(request):
     unread_only = request.query_params.get('unread_only', 'false').lower() == 'true'
 
     if unread_only:
-        messages = Message.unread.for_user(request.user)
+        messages = Message.unread.unread_for_user(request.user)
     else:
         if conversation_id:
             filters['conversation_id'] = conversation_id
