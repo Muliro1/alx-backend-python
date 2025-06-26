@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+
+echo "Applying updated blue deployment (image:2.0)..."
+kubectl apply -f blue_deployment.yaml
+
+echo "Starting rolling update..."
+kubectl rollout status deployment/messaging-app-deployment &
+ROLL_PID=$!
+
+# Port-forward the service to localhost:8000 in the background
+kubectl port-forward service/messaging-app-service 8000:8000 &
+PF_PID=$!
+sleep 3
+
+echo "Testing for downtime with curl... (Ctrl+C to stop)"
+# Send requests every second for 30 seconds
+for i in {1..30}; do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/)
+  echo "[$(date +%T)] HTTP Status: $STATUS"
+  sleep 1
+done
+
+# Wait for rollout to finish
+wait $ROLL_PID
+
+# Kill the port-forward process
+kill $PF_PID
+
+echo "\nCurrent pods:"
+kubectl get pods -o wide 
