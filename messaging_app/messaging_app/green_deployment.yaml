@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app-green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: messaging-app-green
+  template:
+    metadata:
+      labels:
+        app: messaging-app-green
+    spec:
+      containers:
+      - name: messaging-app
+        image: messaging_app:latest
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: messaging-app-config
+        - secretRef:
+            name: messaging-app-secrets
