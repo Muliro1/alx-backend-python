@@ -12,6 +12,11 @@ pipeline {
                 git credentialsId: "${GIT_CREDENTIALS}", url: 'https://github.com/Muliro1/alx-backend-python.git', branch: 'main'
             }
         }
+        stage('Show Git Branch') {
+            steps {
+                sh 'git branch'
+            }
+        }
         stage('Install dependencies') {
             steps {
                 withPythonEnv('python3') {
