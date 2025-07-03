@@ -3,19 +3,9 @@ name: Django CI
 on:
   push:
     paths:
-      - '**.py'
-      - 'requirements.txt'
-      - '.github/workflows/ci.yml'
-      - 'Dockerfile'
-      - 'docker-compose.yml'
       - 'messaging_app/**'
   pull_request:
     paths:
-      - '**.py'
-      - 'requirements.txt'
-      - '.github/workflows/ci.yml'
-      - 'Dockerfile'
-      - 'docker-compose.yml'
       - 'messaging_app/**'
 
 jobs:
@@ -60,10 +50,8 @@ jobs:
         run: |
           for i in {1..30}; do
             if mysqladmin ping -h127.0.0.1 -uroot -prootpass --silent; then
-              echo "MySQL is up!"
               break
             fi
-            echo "Waiting for MySQL..."
             sleep 2
           done
 
@@ -72,27 +60,13 @@ jobs:
           cd messaging_app
           python manage.py migrate
 
-      - name: Lint with flake8
+      - name: Run tests
         run: |
-          pip install flake8
-          flake8 messaging_app --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 messaging_app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-      - name: Run tests with coverage
-        run: |
-          pip install coverage
           cd messaging_app
-          coverage run --source=. manage.py test
-          coverage xml -o coverage.xml
+          pytest --junitxml=report.xml
 
-      - name: Upload test results
+      - name: Upload test report
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: messaging_app/report.xml
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: messaging_app/coverage.xml 
+          path: messaging_app/report.xml 

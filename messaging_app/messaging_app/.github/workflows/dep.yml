@@ -5,9 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'Dockerfile'
       - 'messaging_app/**'
-      - '.github/workflows/dep.yaml'
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -28,7 +27,10 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./messaging_app
           file: ./messaging_app/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/messaging_app:latest 
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/messaging_app:latest
+
+      - name: Logout from Docker Hub
+        run: docker logout 
