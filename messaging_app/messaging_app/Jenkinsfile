@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    environment {
+        // Use the credentials ID you set in Jenkins
+        GIT_CREDENTIALS = credentials('github-creds')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git credentialsId: "${GIT_CREDENTIALS}", url: 'https://github.com/Muliro1/alx-backend-python.git', branch: 'main'
+            }
+        }
+        stage('Install dependencies') {
+            steps {
+                withPythonEnv('python3') {
+                    sh 'pip install --upgrade pip'
+                    sh 'pip install -r requirements.txt'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                withPythonEnv('python3') {
+                    sh 'pytest --junitxml=report.xml'
+                }
+            }
+            post {
+                always {
+                    junit 'report.xml'
+                }
+            }
+        }
+    }
+    triggers {
+        // No triggers for manual only
+    }
+}
