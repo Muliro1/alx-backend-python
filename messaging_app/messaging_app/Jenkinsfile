@@ -37,6 +37,22 @@ pipeline {
                 }
             }
         }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("yourdockerhubusername/messaging_app:${env.BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
     }
     triggers {
         // No triggers for manual only
