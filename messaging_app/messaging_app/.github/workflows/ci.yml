@@ -1,0 +1,84 @@
+name: Django CI
+
+on:
+  push:
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - '.github/workflows/ci.yml'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'messaging_app/**'
+  pull_request:
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - '.github/workflows/ci.yml'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'messaging_app/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: messaging_db
+          MYSQL_USER: messaging_user
+          MYSQL_PASSWORD: messaging_pass
+          MYSQL_ROOT_PASSWORD: rootpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent" \
+          --health-interval=10s \
+          --health-timeout=5s \
+          --health-retries=3
+    env:
+      DB_NAME: messaging_db
+      DB_USER: messaging_user
+      DB_PASSWORD: messaging_pass
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r messaging_app/requirements.txt
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h127.0.0.1 -uroot -prootpass --silent; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Run migrations
+        run: |
+          cd messaging_app
+          python manage.py migrate
+
+      - name: Run tests
+        run: |
+          cd messaging_app
+          pytest --junitxml=report.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: messaging_app/report.xml 
