@@ -4,6 +4,8 @@ pipeline {
     environment {
         // Use the credentials ID you set in Jenkins
         GIT_CREDENTIALS = credentials('github-creds')
+        DOCKER_IMAGE_NAME = 'yourdockerhubusername/messaging_app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -28,32 +30,49 @@ pipeline {
         stage('Run Tests') {
             steps {
                 withPythonEnv('python3') {
-                    sh 'pytest --junitxml=report.xml'
+                    sh 'cd messaging_app && pytest --junitxml=report.xml'
                 }
             }
             post {
                 always {
-                    junit 'report.xml'
+                    junit 'messaging_app/report.xml'
                 }
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("yourdockerhubusername/messaging_app:${env.BUILD_NUMBER}")
+                    // Build the Docker image from the messaging_app directory
+                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${DOCKER_TAG}", "./messaging_app")
                 }
             }
         }
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push to Docker Hub
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
                         dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
         }
     }
+    
+    post {
+        always {
+            // Clean up Docker images to save space
+            sh 'docker system prune -f'
+        }
+        success {
+            echo "Docker image ${DOCKER_IMAGE_NAME}:${DOCKER_TAG} built and pushed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check the logs for details."
+        }
+    }
+    
     triggers {
         // No triggers for manual only
     }
