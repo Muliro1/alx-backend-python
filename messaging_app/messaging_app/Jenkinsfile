@@ -21,17 +21,13 @@ pipeline {
         }
         stage('Install dependencies') {
             steps {
-                withPythonEnv('python3') {
-                    sh 'pip3 install --upgrade pip'
-                    sh 'pip3 install -r messaging_app/requirements.txt'
-                }
+                sh 'pip3 install --upgrade pip'
+                sh 'pip3 install -r messaging_app/requirements.txt'
             }
         }
         stage('Run Tests') {
             steps {
-                withPythonEnv('python3') {
-                    sh 'cd messaging_app && pytest --junitxml=report.xml'
-                }
+                sh 'cd messaging_app && pytest --junitxml=report.xml'
             }
             post {
                 always {
