@@ -21,13 +21,17 @@ pipeline {
         }
         stage('Install dependencies') {
             steps {
-                sh 'pip3 install --upgrade pip'
-                sh 'pip3 install -r messaging_app/requirements.txt'
+                withPythonEnv('python3') {
+                    sh 'pip3 install --upgrade pip'
+                    sh 'pip3 install -r messaging_app/requirements.txt'
+                }
             }
         }
         stage('Run Tests') {
             steps {
-                sh 'cd messaging_app && pytest --junitxml=report.xml'
+                withPythonEnv('python3') {
+                    sh 'cd messaging_app && pytest --junitxml=report.xml'
+                }
             }
             post {
                 always {
@@ -67,5 +71,9 @@ pipeline {
         failure {
             echo "Pipeline failed! Check the logs for details."
         }
+    }
+    
+    triggers {
+        // No triggers for manual only
     }
 }
