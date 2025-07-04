@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Use the credentials ID you set in Jenkins
         GIT_CREDENTIALS = credentials('github-creds')
-        DOCKER_IMAGE_NAME = 'yourdockerhubusername/messaging_app'
+        DOCKER_IMAGE_NAME = 'muliro1/messaging_app'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
 
@@ -71,9 +71,5 @@ pipeline {
         failure {
             echo "Pipeline failed! Check the logs for details."
         }
-    }
-    
-    triggers {
-        // No triggers for manual only
     }
 }
