@@ -14,6 +14,16 @@ pipeline {
     }
 
     stages {
+        stage('Configure Git') {
+            steps {
+                // Configure Git to handle network issues
+                sh 'git config --global http.postBuffer 524288000'
+                sh 'git config --global http.maxRequestBuffer 100M'
+                sh 'git config --global core.compression 9'
+                sh 'git config --global http.lowSpeedLimit 0'
+                sh 'git config --global http.lowSpeedTime 999999'
+            }
+        }
         stage('Checkout') {
             steps {
                 git credentialsId: "${GIT_CREDENTIALS}", url: 'https://github.com/Muliro1/alx-backend-python.git', branch: 'main'
