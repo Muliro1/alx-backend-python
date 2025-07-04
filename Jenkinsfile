@@ -8,6 +8,11 @@ pipeline {
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
 
+    tools {
+        // Explicitly specify Python tool to avoid Java/Maven conflicts
+        python 'Python-3.10'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -21,17 +26,13 @@ pipeline {
         }
         stage('Install dependencies') {
             steps {
-                withPythonEnv('python3') {
-                    sh 'pip3 install --upgrade pip'
-                    sh 'pip3 install -r messaging_app/requirements.txt'
-                }
+                sh 'python -m pip install --upgrade pip'
+                sh 'python -m pip install -r messaging_app/requirements.txt'
             }
         }
         stage('Run Tests') {
             steps {
-                withPythonEnv('python3') {
-                    sh 'cd messaging_app && pytest --junitxml=report.xml'
-                }
+                sh 'cd messaging_app && python -m pytest --junitxml=report.xml'
             }
             post {
                 always {
